@@ -1,0 +1,74 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+
+# Gradle files
+.gradle/
+build/
+**/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Signing files
+*.jks
+*.keystore
+
+# IntelliJ/Android Studio specific files
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Android Studio captures
+captures/
+
+# Misc
+*.log
+*.xml.orig
+*.orig
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Gradle caches
+.gradle/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin specific
+*.kotlin_module
+
+# NDK
+obj/
+
+# Crashlytics
+crashlytics-build.properties
+fabric.properties
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Firebase
+google-services.json

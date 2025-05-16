@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PocketMic</string>
+    <string name="start_server">Start Server</string>
+    <string name="stop_server">Stop Server</string>
+    <string name="port_hint">Port (default: 50005)</string>
+    <string name="status_not_running">Status: Not running</string>
+    <string name="status_listening">Status: Listening on port %1$d</string>
+    <string name="status_stopped">Status: Server stopped</string>
+    <string name="local_ip">Local IP: %1$s</string>
+</resources> 
