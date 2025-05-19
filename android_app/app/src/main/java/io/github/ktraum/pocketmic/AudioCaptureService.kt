@@ -11,10 +11,12 @@ class AudioCaptureService {
     private val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
     private val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
     private val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT) * 2
-
+        
     private var audioRecord: AudioRecord? = null
     private var isRecording = false
 
+    val BUFFER_SIZE_ACTUAL get() = BUFFER_SIZE
+    
     fun start() {
         if (isRecording) return
         audioRecord = AudioRecord(MediaRecorder.AudioSource.MIC, SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT, BUFFER_SIZE)
