@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using NAudio.Wave;
+using System.Configuration;
+using System.Windows.Controls;
 
-namespace MyPhoneMic.Windows
+namespace PocketMic.Windows
 {
     public partial class MainWindow : Window
     {
@@ -17,11 +19,100 @@ namespace MyPhoneMic.Windows
         private Task? _receiveTask;
         private int _totalBytesReceived;
         private DateTime _lastLogTime = DateTime.Now;
+        private readonly Configuration _config;
+        private bool _isLoadingSettings;
 
         public MainWindow()
         {
             InitializeComponent();
+            
+            // Load saved settings
+            _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             LoadAudioDevices();
+            LoadSavedSettings();
+
+            // Add event handlers for settings changes
+            IpAddressTextBox.TextChanged += Settings_Changed;
+            PortTextBox.TextChanged += Settings_Changed;
+            OutputDeviceComboBox.SelectionChanged += Settings_Changed;
+        }
+
+        private void Settings_Changed(object sender, EventArgs e)
+        {
+            if (!_isLoadingSettings)
+            {
+                SaveSettings();
+            }
+        }
+
+        private void LoadSavedSettings()
+        {
+            try
+            {
+                _isLoadingSettings = true;
+
+                var savedIp = _config.AppSettings.Settings["LastIpAddress"]?.Value;
+                var savedPort = _config.AppSettings.Settings["LastPort"]?.Value;
+                var savedDeviceId = _config.AppSettings.Settings["LastOutputDeviceId"]?.Value;
+
+                if (!string.IsNullOrEmpty(savedIp))
+                    IpAddressTextBox.Text = savedIp;
+                if (!string.IsNullOrEmpty(savedPort))
+                    PortTextBox.Text = savedPort;
+                if (!string.IsNullOrEmpty(savedDeviceId) && int.TryParse(savedDeviceId, out int deviceId))
+                {
+                    // Find and select the saved device
+                    for (int i = 0; i < OutputDeviceComboBox.Items.Count; i++)
+                    {
+                        var device = (DeviceInfo)OutputDeviceComboBox.Items[i];
+                        if (device.Id == deviceId)
+                        {
+                            OutputDeviceComboBox.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"Error loading saved settings: {ex.Message}");
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                if (_config.AppSettings.Settings["LastIpAddress"] == null)
+                    _config.AppSettings.Settings.Add("LastIpAddress", IpAddressTextBox.Text);
+                else
+                    _config.AppSettings.Settings["LastIpAddress"].Value = IpAddressTextBox.Text;
+
+                if (_config.AppSettings.Settings["LastPort"] == null)
+                    _config.AppSettings.Settings.Add("LastPort", PortTextBox.Text);
+                else
+                    _config.AppSettings.Settings["LastPort"].Value = PortTextBox.Text;
+
+                var selectedDevice = OutputDeviceComboBox.SelectedItem as DeviceInfo;
+                if (selectedDevice != null)
+                {
+                    if (_config.AppSettings.Settings["LastOutputDeviceId"] == null)
+                        _config.AppSettings.Settings.Add("LastOutputDeviceId", selectedDevice.Id.ToString());
+                    else
+                        _config.AppSettings.Settings["LastOutputDeviceId"].Value = selectedDevice.Id.ToString();
+                }
+
+                _config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
+            catch (Exception ex)
+            {
+                LogMessage($"Error saving settings: {ex.Message}");
+            }
         }
 
         private void LoadAudioDevices()
@@ -48,6 +139,9 @@ namespace MyPhoneMic.Windows
                 LogMessage($"Attempting to connect to {IpAddressTextBox.Text}:{PortTextBox.Text}");
                 _tcpClient = new TcpClient();
                 await _tcpClient.ConnectAsync(IpAddressTextBox.Text, int.Parse(PortTextBox.Text));
+                
+                // Save settings after successful connection
+                SaveSettings();
                 
                 _isConnected = true;
                 _totalBytesReceived = 0;

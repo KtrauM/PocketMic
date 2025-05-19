@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace MyPhoneMic.Windows
+namespace PocketMic.Windows
 {
     public partial class App : Application
     {
