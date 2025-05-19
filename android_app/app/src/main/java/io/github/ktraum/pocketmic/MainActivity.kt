@@ -177,26 +177,31 @@ class MainActivity : AppCompatActivity() {
             putExtra(AudioServerService.EXTRA_PORT, port)
         }
 
+        statusText.text = getString(R.string.status_listening, port)
+        startStopButton.text = getString(R.string.stop_server)
+        portInput.isEnabled = false
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {
             startService(serviceIntent)
         }
         
+        // Keep the delayed check as a fallback
         handler.postDelayed({
-            Log.d("MainActivity", "Delayed UI update check, running: ${AudioServerService.IS_SERVICE_RUNNING}")
-            updateUI()
-            
+            // Only update if service actually failed to start
             if (!AudioServerService.IS_SERVICE_RUNNING) {
-                handler.postDelayed({
-                    updateUI()
-                }, 1000)
+                updateUI()
             }
-        }, 500)
+        }, 300)
     }
 
     private fun stopServerService() {
         if (!AudioServerService.IS_SERVICE_RUNNING) return
+
+        statusText.text = getString(R.string.status_not_running)
+        startStopButton.text = getString(R.string.start_server)
+        portInput.isEnabled = true
 
         val serviceIntent = Intent(this, AudioServerService::class.java).apply {
             action = AudioServerService.ACTION_STOP_SERVER
@@ -204,8 +209,10 @@ class MainActivity : AppCompatActivity() {
         startService(serviceIntent)
         
         handler.postDelayed({
-            updateUI()
-        }, 500)
+            if (AudioServerService.IS_SERVICE_RUNNING) {
+                updateUI()
+            }
+        }, 300)
     }
 
     private fun getLocalIpAddress(): String? {
