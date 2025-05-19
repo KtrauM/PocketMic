@@ -1,0 +1,57 @@
+<Window x:Class="MyPhoneMic.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MyPhoneMic Receiver" Height="450" Width="400"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Connection Settings -->
+        <GroupBox Header="Connection Settings" Grid.Row="0" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <DockPanel Margin="0,5">
+                    <Label Content="IP Address:" Width="80"/>
+                    <TextBox x:Name="IpAddressTextBox" Text="192.168.1.100"/>
+                </DockPanel>
+                <DockPanel Margin="0,5">
+                    <Label Content="Port:" Width="80"/>
+                    <TextBox x:Name="PortTextBox" Text="50005"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Audio Output Settings -->
+        <GroupBox Header="Audio Output" Grid.Row="1" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <DockPanel Margin="0,5">
+                    <Label Content="Output Device:" Width="80"/>
+                    <ComboBox x:Name="OutputDeviceComboBox" Width="200"/>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Connection Status -->
+        <GroupBox Header="Status" Grid.Row="2" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <TextBlock x:Name="StatusTextBlock" Text="Not Connected" Margin="0,5"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Control Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
+            <Button x:Name="ConnectButton" Content="Connect" Width="100" Margin="5" Click="ConnectButton_Click"/>
+            <Button x:Name="DisconnectButton" Content="Disconnect" Width="100" Margin="5" Click="DisconnectButton_Click" IsEnabled="False"/>
+        </StackPanel>
+
+        <!-- Log Area -->
+        <GroupBox Header="Log" Grid.Row="4">
+            <TextBox x:Name="LogTextBox" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+        </GroupBox>
+    </Grid>
+</Window> 
