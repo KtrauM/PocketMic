@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using NAudio.Wave;
-using System.Configuration;
 using System.Windows.Controls;
 
 namespace PocketMic.Windows
@@ -19,7 +18,7 @@ namespace PocketMic.Windows
         private Task? _receiveTask;
         private int _totalBytesReceived;
         private DateTime _lastLogTime = DateTime.Now;
-        private readonly Configuration _config;
+        private readonly AppSettings _settings;
         private bool _isLoadingSettings;
 
         public MainWindow()
@@ -27,7 +26,7 @@ namespace PocketMic.Windows
             InitializeComponent();
             
             // Load saved settings
-            _config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            _settings = AppSettings.Load();
             LoadAudioDevices();
             LoadSavedSettings();
 
@@ -51,25 +50,19 @@ namespace PocketMic.Windows
             {
                 _isLoadingSettings = true;
 
-                var savedIp = _config.AppSettings.Settings["LastIpAddress"]?.Value;
-                var savedPort = _config.AppSettings.Settings["LastPort"]?.Value;
-                var savedDeviceId = _config.AppSettings.Settings["LastOutputDeviceId"]?.Value;
-
-                if (!string.IsNullOrEmpty(savedIp))
-                    IpAddressTextBox.Text = savedIp;
-                if (!string.IsNullOrEmpty(savedPort))
-                    PortTextBox.Text = savedPort;
-                if (!string.IsNullOrEmpty(savedDeviceId) && int.TryParse(savedDeviceId, out int deviceId))
+                if (!string.IsNullOrEmpty(_settings.LastIpAddress))
+                    IpAddressTextBox.Text = _settings.LastIpAddress;
+                if (!string.IsNullOrEmpty(_settings.LastPort))
+                    PortTextBox.Text = _settings.LastPort;
+                
+                // Find and select the saved device
+                for (int i = 0; i < OutputDeviceComboBox.Items.Count; i++)
                 {
-                    // Find and select the saved device
-                    for (int i = 0; i < OutputDeviceComboBox.Items.Count; i++)
+                    var device = (DeviceInfo)OutputDeviceComboBox.Items[i];
+                    if (device.Id == _settings.LastOutputDeviceId)
                     {
-                        var device = (DeviceInfo)OutputDeviceComboBox.Items[i];
-                        if (device.Id == deviceId)
-                        {
-                            OutputDeviceComboBox.SelectedIndex = i;
-                            break;
-                        }
+                        OutputDeviceComboBox.SelectedIndex = i;
+                        break;
                     }
                 }
             }
@@ -87,27 +80,16 @@ namespace PocketMic.Windows
         {
             try
             {
-                if (_config.AppSettings.Settings["LastIpAddress"] == null)
-                    _config.AppSettings.Settings.Add("LastIpAddress", IpAddressTextBox.Text);
-                else
-                    _config.AppSettings.Settings["LastIpAddress"].Value = IpAddressTextBox.Text;
-
-                if (_config.AppSettings.Settings["LastPort"] == null)
-                    _config.AppSettings.Settings.Add("LastPort", PortTextBox.Text);
-                else
-                    _config.AppSettings.Settings["LastPort"].Value = PortTextBox.Text;
+                _settings.LastIpAddress = IpAddressTextBox.Text;
+                _settings.LastPort = PortTextBox.Text;
 
                 var selectedDevice = OutputDeviceComboBox.SelectedItem as DeviceInfo;
                 if (selectedDevice != null)
                 {
-                    if (_config.AppSettings.Settings["LastOutputDeviceId"] == null)
-                        _config.AppSettings.Settings.Add("LastOutputDeviceId", selectedDevice.Id.ToString());
-                    else
-                        _config.AppSettings.Settings["LastOutputDeviceId"].Value = selectedDevice.Id.ToString();
+                    _settings.LastOutputDeviceId = selectedDevice.Id;
                 }
 
-                _config.Save(ConfigurationSaveMode.Modified);
-                ConfigurationManager.RefreshSection("appSettings");
+                _settings.Save();
             }
             catch (Exception ex)
             {
