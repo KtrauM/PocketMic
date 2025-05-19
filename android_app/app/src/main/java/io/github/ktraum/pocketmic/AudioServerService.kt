@@ -29,6 +29,8 @@ class AudioServerService : Service() {
         const val ACTION_START_SERVER = "com.example.wifimicserver.ACTION_START_SERVER"
         const val ACTION_STOP_SERVER = "com.example.wifimicserver.ACTION_STOP_SERVER"
         const val EXTRA_PORT = "com.example.wifimicserver.EXTRA_PORT"
+        const val ACTION_SERVER_STATUS_CHANGED = "com.example.wifimicserver.ACTION_SERVER_STATUS_CHANGED"
+        const val EXTRA_SERVER_RUNNING = "com.example.wifimicserver.EXTRA_SERVER_RUNNING"
         var IS_SERVICE_RUNNING = false
     }
 
@@ -88,6 +90,9 @@ class AudioServerService : Service() {
         tcpAudioServer?.start()
 
         IS_SERVICE_RUNNING = true
+        
+        sendServerStatusBroadcast(true)
+        
         Log.d(TAG, "Server started and foreground service active.")
     }
 
@@ -105,10 +110,21 @@ class AudioServerService : Service() {
             if (it.isHeld) it.release()
         }
 
+        IS_SERVICE_RUNNING = false
+        
+        sendServerStatusBroadcast(false)
+        
         stopForeground(true)
         stopSelf()
-        IS_SERVICE_RUNNING = false
         Log.d(TAG, "Server stopped.")
+    }
+    
+    private fun sendServerStatusBroadcast(isRunning: Boolean) {
+        val intent = Intent(ACTION_SERVER_STATUS_CHANGED).apply {
+            putExtra(EXTRA_SERVER_RUNNING, isRunning)
+        }
+        Log.d(TAG, "Sending broadcast: server running = $isRunning")
+        sendBroadcast(intent)
     }
 
     private fun createNotificationChannel() {
@@ -132,6 +148,7 @@ class AudioServerService : Service() {
         }
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, pendingIntentFlags)
 
+        // Action to stop the server from notification
         val stopIntent = Intent(this, AudioServerService::class.java).apply {
             action = ACTION_STOP_SERVER
         }
