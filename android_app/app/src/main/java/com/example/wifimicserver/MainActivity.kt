@@ -1,4 +1,4 @@
-package com.example.wifimicserver
+package io.github.ktraum.pocketmic
 
 import android.Manifest
 import android.content.pm.PackageManager

@@ -5,6 +5,8 @@ import java.io.IOException
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.Executors
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 class TcpAudioServer(private val port: Int, private val audioCaptureService: AudioCaptureService) {
     private val TAG = "TcpAudioServer"
@@ -50,18 +52,24 @@ class TcpAudioServer(private val port: Int, private val audioCaptureService: Aud
         val buffer = ShortArray(1024)
         try {
             val outputStream = clientSocket?.getOutputStream()
+            // Start audio capture before streaming
+            audioCaptureService.start()
+            Log.d(TAG, "Audio capture started")
+            
             while (isRunning && clientSocket?.isConnected == true) {
                 val bytesRead = audioCaptureService.read(buffer, 0, buffer.size)
                 if (bytesRead > 0) {
                     val byteArray = ShortArray(bytesRead) { buffer[it] }.toByteArray()
                     outputStream?.write(byteArray)
                     outputStream?.flush()
+                    Log.d(TAG, "Sent $bytesRead samples")
                 }
             }
         } catch (e: IOException) {
             Log.e(TAG, "Error streaming audio", e)
         } finally {
             try {
+                audioCaptureService.stop()
                 clientSocket?.close()
             } catch (e: IOException) {
                 Log.e(TAG, "Error closing client socket", e)
@@ -70,11 +78,11 @@ class TcpAudioServer(private val port: Int, private val audioCaptureService: Aud
     }
 
     private fun ShortArray.toByteArray(): ByteArray {
-        val byteArray = ByteArray(size * 2)
-        for (i in indices) {
-            byteArray[i * 2] = (this[i].toInt() and 0xFF).toByte()
-            byteArray[i * 2 + 1] = (this[i].toInt() shr 8 and 0xFF).toByte()
+        val byteBuffer = ByteBuffer.allocate(size * 2)
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
+        for (sample in this) {
+            byteBuffer.putShort(sample)
         }
-        return byteArray
+        return byteBuffer.array()
     }
 } 
